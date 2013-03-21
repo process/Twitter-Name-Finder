@@ -24,16 +24,18 @@ print "Trying %d names..." % total_names
 
 for name in names:
   name = ''.join(name)
-  status = urllib2.urlopen('http://twitter.com/' + name).getcode()
 
-  # 404 = Not Found. It's available!
-  if status == 404:
+  try:
+    status = urllib2.urlopen('http://twitter.com/' + name).getcode()
+  except:
+    # 404 = Not Found. It's available!
     print "Name available: " + name
     names_available += 1
     available_names.append(name)
+    continue
 
   # 200 = OK. It's taken.
-  elif status == 200:
+  if status == 200:
     names_taken += 1
 
   # 302 = Moved. The account has been suspended.
