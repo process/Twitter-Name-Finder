@@ -4,25 +4,42 @@ import itertools
 
 chars = 'abcdefghijklmnopqrstuvwxyz0123456789_'
 
+def brute_force_names(length):
+  return itertools.product(chars, repeat=length)
+
 # Command line arg gives length of names to check.
 # Defaults to 1
 if len(sys.argv) == 1:
   name_length = 1
-else:
+  names = brute_force_names(name_length)
+  using_dict = False
+elif sys.argv[1] == 'dict':
+  f = open('words')
+  names = f.read().split()
+  using_dict = True
+elif sys.argv[1].isdigit():
   name_length = int(sys.argv[1])
-
-names = itertools.product(chars, repeat=name_length)
+  names = brute_force_names(name_length)
+  using_dict = False
+else:
+  print "Error: argument must be number or 'dict'"
+  sys.exit(-1)
 
 # Just some stats variables
 names_taken = 0
 names_suspended = 0
 names_available = 0
 available_names = []
-total_names = len(chars) ** name_length
+
+if using_dict:
+  total_names = len(names)
+else:
+  total_names = len(chars) ** name_length
 
 print "Trying %d names..." % total_names
 
 for name in names:
+  # Join tuples into string
   name = ''.join(name)
 
   try:
