@@ -1,11 +1,24 @@
 import sys
-import urllib2
 import itertools
+import eventlet
+from eventlet.green import httplib
 
 chars = 'abcdefghijklmnopqrstuvwxyz0123456789_'
 
 def brute_force_names(length):
   return itertools.product(chars, repeat=length)
+
+def get_http_status(name):
+  try:
+    c = httplib.HTTPSConnection("twitter.com")
+    c.request("HEAD", "/%s" % name)
+    return c.getresponse().status, name
+  except Exception as e:
+    # Assume 404
+    return 404, name
+
+def tuple_to_string(tup):
+  return ''.join(tup)
 
 # Command line arg gives length of names to check.
 # Defaults to 1
@@ -35,24 +48,21 @@ if using_dict:
   total_names = len(names)
 else:
   total_names = len(chars) ** name_length
+  names = [tuple_to_string(name) for name in names]
 
 print "Trying %d names..." % total_names
 
-for name in names:
-  # Join tuples into string
-  name = ''.join(name)
+thread_pool = eventlet.GreenPool(200)
 
-  try:
-    status = urllib2.urlopen('http://twitter.com/' + name).getcode()
-  except:
-    # 404 = Not Found. It's available!
+for status, name in thread_pool.imap(get_http_status, names):
+  # 404 = not Found. It's available!
+  if status == 404:
     print "Name available: " + name
     names_available += 1
     available_names.append(name)
-    continue
 
   # 200 = OK. It's taken.
-  if status == 200:
+  elif status == 200:
     names_taken += 1
 
   # 302 = Moved. The account has been suspended.
@@ -62,6 +72,7 @@ for name in names:
   else:
     print "Strange result with name:" + name
 
+# Print results
 print str(total_names) + " total names checked"
 print str(names_taken) + " were taken"
 print str(names_suspended) + " were suspended. (unusable)"
