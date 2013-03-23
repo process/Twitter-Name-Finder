@@ -52,7 +52,7 @@ else:
 
 print "Trying %d names..." % total_names
 
-thread_pool = eventlet.GreenPool(200)
+thread_pool = eventlet.GreenPool(100)
 
 for status, name in thread_pool.imap(get_http_status, names):
   # 404 = not Found. It's available!
