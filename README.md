@@ -8,7 +8,8 @@ This short python script will look for available unclaimed twitter handles.
   --dict FILE              Tries names listed in the given file
   --out FILE               Stores all available names in the given file
 
-Either --brute or --dict MUST be specified.```
+Either --brute or --dict MUST be specified.
+```
 
 The dictionary file should be a newline-separated list of words. The 
 output file follows the same format. The characters using in brute 
