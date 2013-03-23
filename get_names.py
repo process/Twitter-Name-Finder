@@ -4,15 +4,14 @@ import eventlet
 from eventlet.green import httplib
 
 # Globals
-
 CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789_'
+POOL_SIZE = 5
 USAGE = """Usage: %s [--brute N] [--dict FILE] [--out FILE]
   --brute N                Tries all possible names of length N
   --dict FILE              Tries names listed in the given file
   --out FILE               Stores all available names in the given file
 
 Either --brute or --dict MUST be specified."""
-POOL_SIZE = 5
 
 # Helper function definitions
 
@@ -31,26 +30,27 @@ def tuple_to_string(tup):
   return ''.join(tup)
 
 # Parse command line arguments
-if '--out' in sys.argv:
-  i = sys.argv.index('--out')
-  outfile = open(sys.argv[i+1], 'w')
-else:
-  outfile = None
 
-if '--brute' in sys.argv:
-  i = sys.argv.index('--brute')
-  name_length = int(sys.argv[i+1])
-  names = brute_force_names(name_length)
-  using_dict = False
-elif '--dict' in sys.argv:
-  i = sys.argv.index('--dict')
-  f = open(sys.argv[i+1])
-  names = f.read().split()
-  using_dict = True
-else:
+try:
+  if '--brute' in sys.argv:
+    i = sys.argv.index('--brute')
+    name_length = int(sys.argv[i+1])
+    names = brute_force_names(name_length)
+    using_dict = False
+  else: # If '--brute' wasn't given, '--dict' should be
+    i = sys.argv.index('--dict')
+    f = open(sys.argv[i+1])
+    names = f.read().split()
+    using_dict = True
+
+  if '--out' in sys.argv:
+    i = sys.argv.index('--out')
+    outfile = open(sys.argv[i+1], 'w')
+  else:
+    outfile = None
+except:
   print USAGE % sys.argv[0]
   sys.exit(-1)
-
 
 # Just some stats variables
 names_taken = 0
