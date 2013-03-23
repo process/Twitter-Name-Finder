@@ -9,13 +9,9 @@ def brute_force_names(length):
   return itertools.product(chars, repeat=length)
 
 def get_http_status(name):
-  try:
     c = httplib.HTTPSConnection("twitter.com")
     c.request("HEAD", "/%s" % name)
     return c.getresponse().status, name
-  except Exception as e:
-    # Assume 404
-    return 404, name
 
 def tuple_to_string(tup):
   return ''.join(tup)
@@ -52,7 +48,7 @@ else:
 
 print "Trying %d names..." % total_names
 
-thread_pool = eventlet.GreenPool(100)
+thread_pool = eventlet.GreenPool(10)
 
 for status, name in thread_pool.imap(get_http_status, names):
   # 404 = not Found. It's available!
@@ -70,7 +66,7 @@ for status, name in thread_pool.imap(get_http_status, names):
     names_suspended += 1
 
   else:
-    print "Strange result with name:" + name
+    print "Bad code. Name: %s; Code: %d" % (name, status)
 
 # Print results
 print str(total_names) + " total names checked"
