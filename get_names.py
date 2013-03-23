@@ -3,10 +3,16 @@ import itertools
 import eventlet
 from eventlet.green import httplib
 
-chars = 'abcdefghijklmnopqrstuvwxyz0123456789_'
+CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789_'
+USAGE = """Usage: %s [--brute N] [--dict FILE]
+  --brute N                Tries all possible names of length N
+  --dict FILE              Tries all possible names listed in the given file
+
+Either --brute or --dict MUST be specified."""
+POOL_SIZE = 10
 
 def brute_force_names(length):
-  return itertools.product(chars, repeat=length)
+  return itertools.product(CHARS, repeat=length)
 
 def get_http_status(name):
     c = httplib.HTTPSConnection("twitter.com")
@@ -16,22 +22,16 @@ def get_http_status(name):
 def tuple_to_string(tup):
   return ''.join(tup)
 
-# Command line arg gives length of names to check.
-# Defaults to 1
-if len(sys.argv) == 1:
-  name_length = 1
+if '--brute' in sys.argv:
+  name_length = int(sys.argv[2])
   names = brute_force_names(name_length)
   using_dict = False
-elif sys.argv[1] == 'dict':
-  f = open('words')
+elif '--dict' in sys.argv:
+  f = open(sys.argv[2])
   names = f.read().split()
   using_dict = True
-elif sys.argv[1].isdigit():
-  name_length = int(sys.argv[1])
-  names = brute_force_names(name_length)
-  using_dict = False
 else:
-  print "Error: argument must be number or 'dict'"
+  print USAGE % sys.argv[0]
   sys.exit(-1)
 
 # Just some stats variables
@@ -43,12 +43,12 @@ available_names = []
 if using_dict:
   total_names = len(names)
 else:
-  total_names = len(chars) ** name_length
+  total_names = len(CHARS) ** name_length
   names = [tuple_to_string(name) for name in names]
 
 print "Trying %d names..." % total_names
 
-thread_pool = eventlet.GreenPool(10)
+thread_pool = eventlet.GreenPool(POOL_SIZE)
 
 for status, name in thread_pool.imap(get_http_status, names):
   # 404 = not Found. It's available!
